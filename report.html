@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFD60A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>รายงานส่งงาน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <div>
+      <span class="tag"><i></i>REALTIME · ASM REPORT</span>
+      <h1>รายงานส่งงาน<span id="jobTitle" hidden></span></h1>
+    </div>
+    <div class="tools">
+      <div class="datebar">
+        <button id="prev" type="button" aria-label="วันก่อนหน้า">‹</button>
+        <label class="dlabel"><b id="dTxt">—</b><small id="dSub"></small><input type="date" id="dIn"></label>
+        <button id="next" type="button" aria-label="วันถัดไป">›</button>
+      </div>
+      <button class="round" id="refresh" type="button" aria-label="รีเฟรช">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="rep-grid">
+    <aside class="side">
+      <section class="panel" style="--i:1">
+        <div class="panel-h"><h2>🎯 ความคืบหน้า</h2><small id="jobSmall"></small></div>
+        <div class="sumtop">
+          <div class="bigring">
+            <svg viewBox="0 0 140 140"><circle class="trk" cx="70" cy="70" r="60"/><circle class="bar" id="ringBar" cx="70" cy="70" r="60"/></svg>
+            <div class="in"><b id="pct">0%</b><small>ส่งแล้ว</small></div>
+          </div>
+          <div class="sumtxt">
+            <div class="k">สาขาที่ส่งงาน</div>
+            <div class="v"><b id="sentN">0</b><span> / <b id="totalN">0</b></span></div>
+            <div class="k" id="subN">0 รายการ</div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><small><i style="background:var(--green)"></i>ส่งแล้ว</small><b id="sOk">0</b></div>
+          <div class="stat"><small><i style="background:var(--red)"></i>ยังไม่ส่ง</small><b id="sNo" style="color:#FF8A82">0</b></div>
+        </div>
+        <div class="updated" id="updated"></div>
+      </section>
+
+      <section class="panel" style="--i:2">
+        <div class="seg" id="seg">
+          <div class="knob"></div>
+          <button class="on" data-f="all" type="button">ทั้งหมด</button>
+          <button data-f="sent" type="button">ส่งแล้ว</button>
+          <button data-f="no" type="button">ยังไม่ส่ง</button>
+        </div>
+        <button class="btn btn-y" id="copyBtn" type="button">📋 คัดลอกสรุปส่ง LINE</button>
+      </section>
+    </aside>
+
+    <section class="cream">
+      <div class="cream-h"><h2>🏬 สถานะรายสาขา</h2><small id="count"></small></div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="q" placeholder="ค้นหา ID / ชื่อสาขา / คำตอบ" autocomplete="off">
+      </div>
+      <div class="cards" id="list">
+        <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="lightbox" id="lb">
+  <button class="lb-x" id="lbX" type="button" aria-label="ปิด">×</button>
+  <div class="lb-img"><img id="lbImg" alt=""></div>
+  <div class="lb-bar"><a class="btn btn-y" id="lbOpen" target="_blank" rel="noopener">เปิดใน Google Drive</a></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const CFG = window.APP_CONFIG || {};
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const pad = n => String(n).padStart(2, '0');
+  const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const today = () => ymd(new Date());
+
+  let date = new URLSearchParams(location.search).get('date') || today();
+  let filter = 'all', data = { stores: [], rows: [], form: { jobName: '', fields: [] } }, model = [], loading = false;
+  const jobName = () => data.form.jobName || '';
+  function paintJob(){
+    $('jobTitle').textContent = jobName(); $('jobTitle').hidden = !jobName();
+    $('jobSmall').textContent = jobName();
+    document.title = 'รายงานส่งงาน · ' + jobName();
+  }
+
+  let toastT;
+  function toast(msg, err){
+    const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (err ? ' err' : '');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  /* ---------- Date ---------- */
+  function paintDate(){
+    const d = new Date(date + 'T00:00:00');
+    $('dTxt').textContent = d.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const diff = Math.round((new Date(today() + 'T00:00:00') - d) / 864e5);
+    $('dSub').textContent = diff === 0 ? 'วันนี้' : diff === 1 ? 'เมื่อวาน' : diff + ' วันก่อน';
+    $('dIn').value = date; $('dIn').max = today();
+    $('next').disabled = date >= today();
+  }
+  function shift(n){
+    const d = new Date(date + 'T00:00:00'); d.setDate(d.getDate() + n);
+    date = ymd(d); paintDate(); load();
+  }
+  $('prev').onclick = () => shift(-1);
+  $('next').onclick = () => shift(1);
+  $('dIn').onchange = e => { if (e.target.value){ date = e.target.value; paintDate(); load(); } };
+  $('dIn').onclick = e => { try { e.target.showPicker(); } catch(err){} };
+
+  /* ---------- Load ---------- */
+  async function load(){
+    if (loading) return; loading = true;
+    $('refresh').classList.add('spinning');
+    if (!model.length) $('list').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+    try {
+      const r = await fetch(`${CFG.API_URL}?action=report&date=${date}`);
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error);
+      data = j; paintJob(); build(); render();
+      $('updated').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+    } catch(e){
+      toast('โหลดข้อมูลไม่สำเร็จ', true);
+      if (!model.length) $('list').innerHTML = '<div class="empty">โหลดข้อมูลไม่สำเร็จ แตะปุ่มรีเฟรชเพื่อลองใหม่</div>';
+    } finally {
+      loading = false; $('refresh').classList.remove('spinning');
+    }
+  }
+
+  function build(){
+    const by = {};
+    data.rows.forEach(r => (by[r.storeId] = by[r.storeId] || []).push(r));
+    model = data.stores.map(s => ({ ...s, subs: (by[s.id] || []).sort((a, b) => b.ts - a.ts) }));
+    Object.keys(by).forEach(id => {
+      if (!model.some(s => s.id === id)) model.push({ id, name: '(ไม่อยู่ใน DATA STORE)', subs: by[id] });
+    });
+  }
+
+  /* ---------- Render ---------- */
+  function render(){
+    const total = model.length, sent = model.filter(s => s.subs.length).length;
+    const p = total ? sent / total : 0;
+    $('ringBar').style.strokeDashoffset = 376.99 * (1 - p);
+    $('ringBar').style.stroke = p >= 1 ? 'var(--green)' : 'var(--y)';
+    $('pct').textContent = Math.round(p * 100) + '%';
+    $('sentN').textContent = sent; $('totalN').textContent = total;
+    $('subN').textContent = data.rows.length + ' รายการที่ส่ง';
+    $('sOk').textContent = sent; $('sNo').textContent = total - sent;
+
+    const q = $('q').value.trim().toLowerCase();
+    const shown = model.filter(s => {
+      if (filter === 'sent' && !s.subs.length) return false;
+      if (filter === 'no' && s.subs.length) return false;
+      if (!q) return true;
+      const hay = [s.id, s.name, ...s.subs.flatMap(x => Object.values(x.a || {}))].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+    $('count').textContent = shown.length + ' สาขา';
+    $('list').innerHTML = shown.length ? shown.map(card).join('') : '<div class="empty">ไม่มีรายการ</div>';
+  }
+
+  function card(s, i){
+    const ok = s.subs.length > 0;
+    return `<article class="rc ${ok ? 'ok' : 'no'}" style="--i:${i}">
+      <div class="rhead">
+        <div><div class="sid">${esc(s.id)}</div><div class="sname">${esc(s.name)}</div></div>
+        <span class="pill ${ok ? 'pill-ok' : 'pill-no'}"><i></i>${ok ? 'ส่งแล้ว' + (s.subs.length > 1 ? ' ×' + s.subs.length : '') : 'ยังไม่ส่ง'}</span>
+      </div>
+      ${s.subs.map(sub).join('')}
+    </article>`;
+  }
+  function sub(r){
+    const F = data.form.fields;
+    const info = F.filter(f => f.type !== 'store' && f.type !== 'files');
+    const ups = F.filter(f => f.type === 'files');
+    return `<div class="subm">
+      <div class="meta">
+        ${info.map(f => `<div><small>${esc(f.label)}</small><b>${esc((r.a || {})[f.id] || '—')}</b></div>`).join('')}
+        <div><small>เวลา</small><b>${esc(r.time)} น.</b></div>
+      </div>
+      ${ups.map(f => { const L = (r.f || {})[f.id] || []; return `
+      <div class="tl">${esc(f.label)} (${L.length})</div>
+      <div class="strip">${L.map(thumb).join('') || '<span class="none">ไม่มีไฟล์</span>'}</div>`; }).join('')}
+      ${r.folder ? `<a class="flink" href="${esc(r.folder)}" target="_blank" rel="noopener">📁 เปิดโฟลเดอร์</a>` : ''}
+    </div>`;
+  }
+  function thumb(f){
+    return `<button class="tb" type="button" data-id="${esc(f.id)}" data-url="${esc(f.url)}">
+      <img loading="lazy" alt="" src="https://drive.google.com/thumbnail?id=${encodeURIComponent(f.id)}&sz=w200"
+        onerror="this.parentNode.classList.add('err')"></button>`;
+  }
+
+  /* ---------- Filters / search ---------- */
+  const segBtns = [...$('seg').querySelectorAll('button')];
+  segBtns.forEach((b, i) => b.onclick = () => {
+    filter = b.dataset.f;
+    segBtns.forEach(x => x.classList.toggle('on', x === b));
+    $('seg').querySelector('.knob').style.transform = `translateX(${i * 100}%)`;
+    render();
+  });
+  let qT; $('q').oninput = () => { clearTimeout(qT); qT = setTimeout(render, 150); };
+  $('refresh').onclick = load;
+
+  /* ---------- Lightbox ---------- */
+  $('list').addEventListener('click', e => {
+    const t = e.target.closest('.tb'); if (!t) return;
+    $('lbImg').src = `https://drive.google.com/thumbnail?id=${encodeURIComponent(t.dataset.id)}&sz=w2000`;
+    $('lbOpen').href = t.dataset.url;
+    $('lb').classList.add('show');
+  });
+  const closeLb = () => $('lb').classList.remove('show');
+  $('lbX').onclick = closeLb;
+  $('lb').addEventListener('click', e => { if (e.target.closest('.lb-img') && e.target.tagName !== 'IMG') closeLb(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+
+  /* ---------- Copy summary ---------- */
+  $('copyBtn').onclick = async () => {
+    const d = new Date(date + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+    const sent = model.filter(s => s.subs.length), no = model.filter(s => !s.subs.length);
+    let txt = `📋 สรุปส่งงาน ${jobName()}\n🗓 ${d}\n✅ ส่งแล้ว ${sent.length}/${model.length} สาขา\n`;
+    if (no.length) txt += `\n❌ ยังไม่ส่ง\n` + no.map(s => `• ${s.id} ${s.name}`).join('\n');
+    else txt += `\n🎉 ส่งครบทุกสาขา`;
+    try { await navigator.clipboard.writeText(txt); toast('คัดลอกแล้ว วางใน LINE ได้เลย'); }
+    catch(e){ toast('คัดลอกไม่สำเร็จ', true); }
+  };
+
+  /* ---------- Auto refresh ---------- */
+  setInterval(() => { if (!document.hidden && date === today()) load(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+
+  paintDate(); load();
+})();
+</script>
+</body>
+</html>

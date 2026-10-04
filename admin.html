@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFD60A">
+<meta name="robots" content="noindex">
+<title>ตั้งค่า</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+
+<!-- ============ PIN LOCK ============ -->
+<section class="lock" id="lock">
+  <div class="lock-card">
+    <div class="lock-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+    <h1>ตั้งค่าระบบ</h1>
+    <p id="lockMsg">ใส่ PIN ผู้ดูแล</p>
+    <div class="dots" id="dots"></div>
+    <div class="keypad" id="keypad">
+      <button data-k="1">1</button><button data-k="2">2<small>ABC</small></button><button data-k="3">3<small>DEF</small></button>
+      <button data-k="4">4<small>GHI</small></button><button data-k="5">5<small>JKL</small></button><button data-k="6">6<small>MNO</small></button>
+      <button data-k="7">7<small>PQRS</small></button><button data-k="8">8<small>TUV</small></button><button data-k="9">9<small>WXYZ</small></button>
+      <button data-k="del" class="kfn" aria-label="ลบ">⌫</button><button data-k="0">0</button><button data-k="ok" class="kok" aria-label="ยืนยัน">→</button>
+    </div>
+    <a class="back" href="index.html">← กลับหน้าส่งงาน</a>
+  </div>
+</section>
+
+<!-- ============ EDITOR ============ -->
+<div class="page" id="app" hidden>
+  <header class="topbar">
+    <div>
+      <span class="tag"><i></i>ADMIN · SETTINGS</span>
+      <h1>ตั้งค่างาน</h1>
+    </div>
+    <div class="tools">
+      <a class="pillbtn" href="index.html" target="_blank" rel="noopener">👁 ดูฟอร์ม</a>
+      <button class="round sm" id="logout" type="button" aria-label="ออกจากระบบ" title="ล็อก">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="adm-grid">
+    <aside class="side">
+      <section class="panel" style="--i:1">
+        <div class="panel-h"><h2>📝 หัวข้องาน</h2></div>
+        <label class="field"><span class="fl">ชื่องาน / หัวข้อ</span><input id="jobName" maxlength="80" placeholder="เช่น โอนฟิล์มเสีย"></label>
+        <label class="field"><span class="fl">คำอธิบายใต้หัวข้อ</span><textarea id="desc" rows="2" maxlength="200" placeholder="ไม่ใส่ก็ได้"></textarea></label>
+        <div class="trow">
+          <div class="stack"><b>เปิดรับงาน</b><small id="activeTxt">พนักงานส่งงานได้</small></div>
+          <button class="sw" id="active" type="button" role="switch"></button>
+        </div>
+      </section>
+
+      <section class="panel" style="--i:2">
+        <div class="panel-h"><h2>🔗 ลิงค์</h2></div>
+        <div class="lrow"><div class="stack"><b>หน้าส่งงาน</b><small id="lnkForm"></small></div><button class="mini" data-copy="lnkForm" type="button">คัดลอก</button></div>
+        <div class="lrow"><div class="stack"><b>หน้า Report (ASM)</b><small id="lnkRep"></small></div><button class="mini" data-copy="lnkRep" type="button">คัดลอก</button></div>
+      </section>
+
+      <section class="panel" style="--i:3">
+        <div class="panel-h"><h2>🔐 PIN ผู้ดูแล</h2></div>
+        <div class="pinrow">
+          <label class="field"><span class="fl">PIN ใหม่ (4–8 หลัก)</span><input id="newPin" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••"></label>
+          <button class="mini y" id="pinBtn" type="button">เปลี่ยน</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="panel" style="--i:2">
+      <div class="panel-h"><h2>❓ คำถาม <span class="cnt" id="qCount"></span></h2><small>แตะเพื่อแก้ไข · ลูกศรเพื่อสลับลำดับ</small></div>
+      <div class="flist" id="list"></div>
+      <div class="addbar">
+        <span>เพิ่มคำถาม</span>
+        <button data-add="text" type="button">Aa ข้อความ</button>
+        <button data-add="number" type="button">123 ตัวเลข</button>
+        <button data-add="select" type="button">☰ ตัวเลือก</button>
+        <button data-add="files" type="button">📷 รูป/ไฟล์</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="savebar" id="savebar">
+  <span>มีการแก้ไขที่ยังไม่บันทึก</span>
+  <button class="mini" id="discard" type="button">ยกเลิก</button>
+  <button class="mini y" id="save" type="button">บันทึก</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const CFG = window.APP_CONFIG || {};
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const ss = {
+    get(k){ try { return sessionStorage.getItem(k); } catch(e){ return null; } },
+    set(k,v){ try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch(e){} }
+  };
+  const TYPE = {
+    store:  { n: 'สาขา', i: '🏬' },
+    text:   { n: 'ข้อความ', i: 'Aa' },
+    number: { n: 'ตัวเลข', i: '123' },
+    select: { n: 'ตัวเลือก', i: '☰' },
+    files:  { n: 'รูป/ไฟล์', i: '📷' }
+  };
+  let PIN = '', model = null, saved = '', open = new Set();
+
+  let toastT;
+  function toast(msg, err){
+    const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (err ? ' err' : '');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+  function haptic(){ try { navigator.vibrate && navigator.vibrate(8); } catch(e){} }
+  async function api(body){
+    const r = await fetch(CFG.API_URL, { method: 'POST', body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!j.ok){ const e = new Error(j.error); e.auth = j.auth; throw e; }
+    return j;
+  }
+
+  /* ================= PIN LOCK ================= */
+  let entry = '';
+  function paintDots(){
+    const n = Math.max(4, entry.length);
+    $('dots').innerHTML = Array.from({ length: n }, (_, i) => `<i class="${i < entry.length ? 'on' : ''}"></i>`).join('');
+  }
+  function key(k){
+    if ($('lock').classList.contains('busy')) return;
+    if (k === 'del') entry = entry.slice(0, -1);
+    else if (k === 'ok') return tryLogin(entry);
+    else if (entry.length < 8) entry += k;
+    haptic(); paintDots();
+  }
+  $('keypad').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (b) key(b.dataset.k); });
+  document.addEventListener('keydown', e => {
+    if (!$('app').hidden) return;
+    if (/^\d$/.test(e.key)) key(e.key);
+    else if (e.key === 'Backspace') key('del');
+    else if (e.key === 'Enter') key('ok');
+  });
+  async function tryLogin(pin, silent){
+    if (pin.length < 4){ if (!silent) wrong('PIN อย่างน้อย 4 หลัก'); return; }
+    if (!/^https:\/\/script\.google\.com\//.test(CFG.API_URL || '')){ wrong('ยังไม่ได้ใส่ API_URL ใน config.js'); return; }
+    $('lock').classList.add('busy'); $('lockMsg').textContent = 'กำลังตรวจสอบ…';
+    try {
+      const j = await api({ action: 'login', pin });
+      PIN = pin; ss.set('pin', pin);
+      load(j.form); unlock();
+    } catch(e){
+      ss.set('pin', null);
+      wrong(e.auth ? e.message : 'เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง');
+    } finally { $('lock').classList.remove('busy'); }
+  }
+  function wrong(msg){
+    entry = ''; paintDots(); $('lockMsg').textContent = msg;
+    const d = $('dots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+    try { navigator.vibrate && navigator.vibrate([30, 40, 30]); } catch(e){}
+  }
+  function unlock(){
+    $('lock').classList.add('out');
+    $('app').hidden = false;
+    setTimeout(() => $('lock').hidden = true, 500);
+  }
+  function lockUp(msg){
+    PIN = ''; ss.set('pin', null); entry = ''; paintDots();
+    $('lockMsg').textContent = msg || 'ใส่ PIN ผู้ดูแล';
+    $('lock').hidden = false;
+    requestAnimationFrame(() => $('lock').classList.remove('out'));
+    setTimeout(() => $('app').hidden = true, 450);
+  }
+  $('logout').onclick = () => { if (dirty() && !confirm('ยังไม่ได้บันทึก ต้องการล็อกเลยไหม?')) return; lockUp(); };
+
+  /* ================= MODEL ================= */
+  function load(form){
+    model = JSON.parse(JSON.stringify(form));
+    saved = JSON.stringify(model);
+    paintMeta(); renderList(); paintDirty();
+  }
+  const dirty = () => model && JSON.stringify(model) !== saved;
+  function paintDirty(){ $('savebar').classList.toggle('show', dirty()); }
+
+  function paintMeta(){
+    $('jobName').value = model.jobName || '';
+    $('desc').value = model.desc || '';
+    paintActive();
+    const base = location.href.replace(/[^/]*([?#].*)?$/, '');
+    $('lnkForm').textContent = base + 'index.html';
+    $('lnkRep').textContent = base + 'report.html';
+  }
+  function paintActive(){
+    const on = model.active !== false;
+    $('active').setAttribute('aria-checked', on);
+    $('activeTxt').textContent = on ? 'พนักงานส่งงานได้' : 'ปิดรับงาน — ฟอร์มจะแสดงว่าปิดชั่วคราว';
+  }
+  $('jobName').oninput = e => { model.jobName = e.target.value; paintDirty(); };
+  $('desc').oninput = e => { model.desc = e.target.value; paintDirty(); };
+  $('active').onclick = () => { model.active = model.active === false; paintActive(); paintDirty(); haptic(); };
+
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('[data-copy]'); if (!b) return;
+    try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); toast('คัดลอกลิงค์แล้ว'); }
+    catch(err){ toast('คัดลอกไม่สำเร็จ', true); }
+  });
+
+  /* ================= FIELD LIST ================= */
+  const list = $('list');
+  function sub(f){
+    const t = [TYPE[f.type].n];
+    if (f.required) t.push('จำเป็น');
+    if (f.type === 'files') t.push(f.multiple ? 'หลายไฟล์' : '1 ไฟล์');
+    if (f.type === 'select') t.push((f.options || []).length + ' ตัวเลือก');
+    return t.join(' · ');
+  }
+  const sw = (k, on, label, note) => `<div class="trow"><div class="stack"><b>${label}</b>${note ? `<small>${note}</small>` : ''}</div>
+    <button class="sw" data-sw="${k}" type="button" role="switch" aria-checked="${!!on}"></button></div>`;
+  function bodyHtml(f){
+    const isStore = f.type === 'store';
+    let h = `<label class="field"><span class="fl">คำถาม / หัวข้อ</span><input data-k="label" value="${esc(f.label)}" maxlength="120"></label>
+      <label class="field"><span class="fl">คำอธิบายเพิ่มเติม</span><input data-k="hint" value="${esc(f.hint || '')}" maxlength="160" placeholder="ไม่ใส่ก็ได้"></label>`;
+    if (!isStore){
+      h += `<div class="fl pad">ประเภทคำตอบ</div><div class="seg4">${['text','number','select','files'].map(t =>
+        `<button type="button" data-type="${t}" class="${f.type === t ? 'on' : ''}">${TYPE[t].i}<span>${TYPE[t].n}</span></button>`).join('')}</div>`;
+    } else {
+      h += `<p class="note">ดึงรายชื่อจากชีต DATA STORE · ลบหรือเปลี่ยนประเภทไม่ได้</p>`;
+    }
+    if (f.type === 'text' || f.type === 'number')
+      h += `<label class="field"><span class="fl">ข้อความตัวอย่างในช่อง</span><input data-k="placeholder" value="${esc(f.placeholder || '')}" maxlength="80" placeholder="เช่น 1234-1326"></label>`;
+    if (f.type === 'select')
+      h += `<label class="field"><span class="fl">ตัวเลือก (บรรทัดละ 1 ข้อ)</span><textarea data-k="options" rows="4" placeholder="ตัวเลือก 1&#10;ตัวเลือก 2">${esc((f.options || []).join('\n'))}</textarea></label>`;
+    h += '<div class="tgroup">';
+    if (!isStore) h += sw('required', f.required, 'จำเป็นต้องกรอก');
+    if (f.type !== 'files') h += sw('remember', f.remember, 'จำค่าล่าสุด', 'ครั้งหน้าไม่ต้องกรอกซ้ำ');
+    if (f.type === 'files'){
+      h += sw('multiple', f.multiple, 'แนบได้หลายไฟล์');
+      h += sw('pdf', f.pdf, 'รับไฟล์ PDF', 'ปิด = รับเฉพาะรูปภาพ');
+    }
+    h += '</div>';
+    h += `<label class="field"><span class="fl">หัวคอลัมน์ในชีต REPORT</span><input data-k="col" value="${esc(f.col || '')}" maxlength="120" placeholder="${esc(f.label)}"></label>
+      <p class="note">ถ้าไม่มีคอลัมน์นี้ ระบบจะเพิ่มต่อท้ายให้ตอนบันทึก</p>`;
+    if (!isStore) h += `<button class="del" data-del type="button">ลบคำถามนี้</button>`;
+    return h;
+  }
+  function cardHtml(f, i, n){
+    const isOpen = open.has(f.id);
+    return `<div class="fc ${isOpen ? 'open' : ''}" data-id="${f.id}">
+      <div class="fc-h" data-tog>
+        <span class="fico t-${f.type}">${TYPE[f.type].i}</span>
+        <div class="stack"><b data-lbl>${esc(f.label) || '<em>ยังไม่มีชื่อ</em>'}${f.required ? '<span class="req">*</span>' : ''}</b><small data-sub>${sub(f)}</small></div>
+        <div class="mv">
+          <button type="button" data-mv="-1" ${i === 0 ? 'disabled' : ''} aria-label="เลื่อนขึ้น">↑</button>
+          <button type="button" data-mv="1" ${i === n - 1 ? 'disabled' : ''} aria-label="เลื่อนลง">↓</button>
+        </div>
+        <span class="chev">${'<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4.5l3 3 3-3"/></svg>'}</span>
+      </div>
+      <div class="fc-body"><div class="fc-in">${bodyHtml(f)}</div></div>
+    </div>`;
+  }
+  function renderList(){
+    const before = {};
+    list.querySelectorAll('.fc').forEach(el => before[el.dataset.id] = el.getBoundingClientRect().top);
+    const F = model.fields;
+    list.innerHTML = F.map((f, i) => cardHtml(f, i, F.length)).join('');
+    $('qCount').textContent = F.length;
+    // FLIP
+    list.querySelectorAll('.fc').forEach(el => {
+      const b = before[el.dataset.id]; if (b == null){ el.classList.add('new'); return; }
+      const dy = b - el.getBoundingClientRect().top; if (!dy) return;
+      el.style.transition = 'none'; el.style.transform = `translateY(${dy}px)`;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.transition = 'transform .5s var(--spring)'; el.style.transform = '';
+      }));
+    });
+  }
+  const cardOf = el => el.closest('.fc');
+  const fOf = el => model.fields.find(f => f.id === cardOf(el).dataset.id);
+  function refreshHead(card, f){
+    card.querySelector('[data-lbl]').innerHTML = (esc(f.label) || '<em>ยังไม่มีชื่อ</em>') + (f.required ? '<span class="req">*</span>' : '');
+    card.querySelector('[data-sub]').textContent = sub(f);
+  }
+  function rebody(card, f){
+    card.querySelector('.fc-in').innerHTML = bodyHtml(f);
+    refreshHead(card, f);
+    card.querySelector('.fico').className = 'fico t-' + f.type;
+    card.querySelector('.fico').textContent = TYPE[f.type].i;
+  }
+
+  list.addEventListener('input', e => {
+    const k = e.target.dataset.k; if (!k) return;
+    const f = fOf(e.target);
+    if (k === 'options') f.options = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+    else f[k] = e.target.value;
+    if (k === 'label') cardOf(e.target).querySelector('[data-k="col"]').placeholder = f.label;
+    refreshHead(cardOf(e.target), f); paintDirty();
+  });
+  list.addEventListener('click', e => {
+    const t = e.target;
+    const mv = t.closest('[data-mv]');
+    if (mv){
+      e.stopPropagation();
+      const f = fOf(mv), F = model.fields, i = F.indexOf(f), j = i + +mv.dataset.mv;
+      if (j < 0 || j >= F.length) return;
+      [F[i], F[j]] = [F[j], F[i]]; renderList(); paintDirty(); haptic(); return;
+    }
+    if (t.closest('[data-tog]')){
+      const card = cardOf(t), id = card.dataset.id;
+      open.has(id) ? open.delete(id) : open.add(id);
+      card.classList.toggle('open'); haptic(); return;
+    }
+    const ty = t.closest('[data-type]');
+    if (ty){
+      const f = fOf(ty), nt = ty.dataset.type; if (f.type === nt) return;
+      f.type = nt;
+      if (nt === 'select' && !(f.options || []).length) f.options = ['ตัวเลือก 1', 'ตัวเลือก 2'];
+      if (nt === 'files'){ delete f.remember; if (f.multiple == null) f.multiple = true; if (f.pdf == null) f.pdf = false; }
+      rebody(cardOf(ty), f); paintDirty(); haptic(); return;
+    }
+    const s = t.closest('[data-sw]');
+    if (s){
+      const f = fOf(s), k = s.dataset.sw; f[k] = !f[k];
+      s.setAttribute('aria-checked', f[k]); refreshHead(cardOf(s), f); paintDirty(); haptic(); return;
+    }
+    const d = t.closest('[data-del]');
+    if (d){
+      if (!d.classList.contains('arm')){
+        d.classList.add('arm'); d.textContent = 'แตะอีกครั้งเพื่อยืนยันการลบ';
+        setTimeout(() => { if (d.isConnected){ d.classList.remove('arm'); d.textContent = 'ลบคำถามนี้'; } }, 3000);
+        return;
+      }
+      const card = cardOf(d), id = card.dataset.id;
+      card.classList.add('gone');
+      setTimeout(() => { model.fields = model.fields.filter(f => f.id !== id); open.delete(id); renderList(); paintDirty(); }, 320);
+    }
+  });
+
+  document.querySelector('.addbar').addEventListener('click', e => {
+    const b = e.target.closest('[data-add]'); if (!b) return;
+    if (model.fields.length >= 30){ toast('เพิ่มได้สูงสุด 30 คำถาม', true); return; }
+    const type = b.dataset.add;
+    const f = { id: 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), type, label: '', hint: '', col: '', required: true };
+    if (type === 'select') f.options = ['ตัวเลือก 1', 'ตัวเลือก 2'];
+    if (type === 'files'){ f.multiple = true; f.pdf = false; }
+    if (type === 'text' || type === 'number') f.placeholder = '';
+    model.fields.push(f); open.add(f.id);
+    renderList(); paintDirty(); haptic();
+    const card = list.querySelector(`[data-id="${f.id}"]`);
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => card.querySelector('[data-k="label"]').focus({ preventScroll: true }), 450);
+  });
+
+  /* ================= SAVE ================= */
+  function validate(){
+    if (!String(model.jobName || '').trim()) return ['jobName', 'กรุณาตั้งชื่องาน'];
+    for (const f of model.fields){
+      if (!String(f.label || '').trim()) return [f.id, 'มีคำถามที่ยังไม่ได้ตั้งชื่อ'];
+      if (f.type === 'select' && !(f.options || []).length) return [f.id, `"${f.label}" ต้องมีตัวเลือกอย่างน้อย 1 ข้อ`];
+    }
+    const seen = {};
+    for (const f of model.fields){
+      const k = String(f.col || f.label).replace(/\s+/g, '').toLowerCase();
+      if (seen[k]) return [f.id, `หัวคอลัมน์ "${f.col || f.label}" ซ้ำกัน`];
+      seen[k] = 1;
+    }
+    return null;
+  }
+  $('save').onclick = async () => {
+    const bad = validate();
+    if (bad){
+      toast(bad[1], true);
+      const el = bad[0] === 'jobName' ? $('jobName').closest('.field') : list.querySelector(`[data-id="${bad[0]}"]`);
+      if (el){
+        if (el.classList.contains('fc') && !el.classList.contains('open')){ open.add(bad[0]); el.classList.add('open'); }
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+      }
+      return;
+    }
+    const btn = $('save'); btn.disabled = true; btn.innerHTML = '<span class="spin dk"></span>';
+    try {
+      const j = await api({ action: 'save', pin: PIN, form: model });
+      load(j.form); toast('บันทึกแล้ว ✓ ฟอร์มอัปเดตทันที');
+    } catch(e){
+      if (e.auth) lockUp(e.message);
+      else toast(e.message && !/fetch|network|json/i.test(e.message) ? e.message : 'บันทึกไม่สำเร็จ ลองใหม่', true);
+    } finally { btn.disabled = false; btn.textContent = 'บันทึก'; }
+  };
+  $('discard').onclick = () => { load(JSON.parse(saved)); toast('ยกเลิกการแก้ไขแล้ว'); };
+  window.addEventListener('beforeunload', e => { if (dirty()){ e.preventDefault(); e.returnValue = ''; } });
+
+  $('pinBtn').onclick = async () => {
+    const np = $('newPin').value.trim();
+    if (!/^\d{4,8}$/.test(np)){ toast('PIN ต้องเป็นตัวเลข 4–8 หลัก', true); return; }
+    try {
+      await api({ action: 'pin', pin: PIN, newPin: np });
+      PIN = np; ss.set('pin', np); $('newPin').value = ''; toast('เปลี่ยน PIN แล้ว ✓');
+    } catch(e){
+      if (e.auth) lockUp(e.message); else toast('เปลี่ยน PIN ไม่สำเร็จ', true);
+    }
+  };
+
+  /* ================= START ================= */
+  paintDots();
+  const saved0 = ss.get('pin');
+  if (saved0) tryLogin(saved0, true);
+})();
+</script>
+</body>
+</html>
