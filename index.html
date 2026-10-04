@@ -25,10 +25,69 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>try{if(sessionStorage.getItem("pz_splash"))document.documentElement.classList.add("no-splash")}catch(e){}</script>
 <link rel="stylesheet" href="style.css">
 <script src="config.js"></script>
 </head>
 <body>
+<div id="splash" class="splash" aria-hidden="true">
+  <div class="sp-in">
+    <svg class="sp-logo" viewBox="0 0 512 512">
+      <defs>
+        <linearGradient id="spg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE45C"/><stop offset="1" stop-color="#FFC400"/></linearGradient>
+        <linearGradient id="spk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#262626"/><stop offset="1" stop-color="#0d0d0d"/></linearGradient>
+        <clipPath id="spc"><rect x="92" y="92" width="328" height="328" rx="84"/></clipPath>
+      </defs>
+      <rect class="sp-bg" width="512" height="512" rx="116" fill="url(#spg)"/>
+      <rect class="sp-box" x="92" y="92" width="328" height="328" rx="84" fill="url(#spk)"/>
+      <g clip-path="url(#spc)">
+        <g class="sp-trail"><rect x="244" y="250" width="24" height="150" rx="12" fill="#FFD60A" opacity=".18"/></g>
+        <g class="sp-arrow">
+          <path d="M256 152 L256 308" stroke="#FFD60A" stroke-width="46" stroke-linecap="round"/>
+          <path d="M180 228 L256 152 L332 228" fill="none" stroke="#FFD60A" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </g>
+      <rect class="sp-bar" x="164" y="342" width="184" height="30" rx="15" fill="#FFD60A" opacity=".55"/>
+      <g class="sp-chk">
+        <circle cx="398" cy="114" r="40" fill="#111"/>
+        <path d="M380 115 L393 128 L417 102" fill="none" stroke="#FFD60A" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </svg>
+    <div class="sp-txt">
+      <div class="sp-tag">BRANCH · TASK SUBMISSION</div>
+      <div class="sp-title"><span id="spType"></span><i class="sp-caret"></i></div>
+      <div class="sp-sub">ส่งงานสาขา · อัพโหลดเอกสาร · รายงาน ASM</div>
+      <div class="sp-prog"><i></i></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var el = document.getElementById('splash'), H = document.documentElement;
+  if (!el) return;
+  if (H.classList.contains('no-splash')){ el.remove(); return; }
+  try { sessionStorage.setItem('pz_splash', '1'); } catch(e){}
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  H.classList.add('splashing'); el.classList.add('play');
+  var t = document.getElementById('spType'), word = 'Project Zone', i = 0, z = null;
+  function type(){
+    if (i >= word.length){ el.classList.add('typed'); return; }
+    var c = word.charAt(i++);
+    if (i === 9){ z = document.createElement('span'); z.className = 'z'; t.appendChild(z); }
+    (z || t).appendChild(document.createTextNode(c));
+    setTimeout(type, c === ' ' ? 120 : 55 + Math.random() * 45);
+  }
+  setTimeout(type, reduce ? 0 : 480);
+  var done = false;
+  function end(){
+    if (done) return; done = true;
+    el.classList.add('out'); H.classList.remove('splashing');
+    setTimeout(function(){ el.remove(); }, 800);
+  }
+  setTimeout(end, reduce ? 700 : 2400);
+  el.addEventListener('click', end);
+})();
+</script>
 <div class="page">
   <header class="topbar">
     <div>
