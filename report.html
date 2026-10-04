@@ -5,7 +5,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#FFD60A">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>รายงานส่งงาน</title>
+<title>Project Zone · รายงาน ASM</title>
+<meta name="description" content="ดูสถานะการส่งงานของทุกสาขาแบบเรียลไทม์">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Project Zone">
+<meta property="og:title" content="Project Zone · รายงาน ASM">
+<meta property="og:description" content="ดูสถานะการส่งงานของทุกสาขาแบบเรียลไทม์">
+<meta property="og:url" content="https://boston5656.github.io/Project-Form-ASM/report.html">
+<meta property="og:image" content="https://boston5656.github.io/Project-Form-ASM/icons/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="apple-mobile-web-app-title" content="Project Zone">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,7 +31,7 @@
 <div class="page">
   <header class="topbar">
     <div>
-      <span class="tag"><i></i>REALTIME · ASM REPORT</span>
+      <span class="tag brand"><img src="icons/icon.svg" alt="">PROJECT ZONE · <i></i>REALTIME</span>
       <h1>รายงานส่งงาน<span id="jobTitle" hidden></span></h1>
     </div>
     <div class="tools">
@@ -99,7 +114,7 @@
   function paintJob(){
     $('jobTitle').textContent = jobName(); $('jobTitle').hidden = !jobName();
     $('jobSmall').textContent = jobName();
-    document.title = 'รายงานส่งงาน · ' + jobName();
+    document.title = 'รายงาน ' + jobName() + ' · Project Zone';
   }
 
   let toastT;

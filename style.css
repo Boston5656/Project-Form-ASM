@@ -25,6 +25,9 @@ button{cursor:pointer}
   padding:6px 2px 16px;animation:rise .8s var(--spring) both}
 .tag{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:99px;
   background:rgba(0,0,0,.08);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.tag.brand{padding-left:6px}
+.tag img{width:20px;height:20px;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.lock-logo{display:block;width:76px;height:76px;margin:0 auto 14px;filter:drop-shadow(0 14px 30px rgba(255,214,10,.35))}
 .tag i{width:6px;height:6px;border-radius:50%;background:var(--ink);animation:pulse 1.6s infinite}
 .topbar h1{font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-top:8px}
 .topbar h1 span{display:inline-block;margin-left:8px;padding:0 12px;border-radius:12px;background:var(--ink);color:var(--y);
