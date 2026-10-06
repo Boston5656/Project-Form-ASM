@@ -135,10 +135,19 @@
           <button data-f="no" type="button">ยังไม่ส่ง</button>
         </div>
         <button class="btn btn-y" id="copyBtn" type="button">📋 คัดลอกสรุปส่ง LINE</button>
+        <button class="btn btn-g rg-open" id="rgOpen" type="button">📊 สรุปหลายวัน</button>
+      </section>
+      <section class="panel rg-days" id="rgDays" hidden style="--i:3">
+        <div class="panel-h"><h2>🗓 รายวัน</h2><small>แตะเพื่อดูวันนั้น</small></div>
+        <div id="rgDayList"></div>
       </section>
     </aside>
 
     <section class="cream">
+      <div class="rg-bar" id="rgBar" hidden>
+        <div><b id="rgTitle">สรุปหลายวัน</b><small id="rgSub"></small></div>
+        <button type="button" id="rgBack">‹ กลับดูรายวัน</button>
+      </div>
       <div class="cream-h"><h2>🏬 สถานะรายสาขา</h2><small id="count"></small></div>
       <div class="search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -158,6 +167,67 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<div class="rg-sheet" id="rgSheet" aria-hidden="true">
+  <div class="rg-card">
+    <div class="rg-h"><b>📊 สรุปหลายวัน</b><button type="button" id="rgX" aria-label="ปิด">✕</button></div>
+    <div class="rg-presets">
+      <button type="button" data-p="7">7 วันล่าสุด</button>
+      <button type="button" data-p="14">14 วันล่าสุด</button>
+      <button type="button" data-p="month">เดือนนี้</button>
+      <button type="button" data-p="last">เดือนก่อน</button>
+    </div>
+    <div class="rg-custom">
+      <label><small>ตั้งแต่</small><input type="date" id="rgFrom"></label>
+      <label><small>ถึง</small><input type="date" id="rgTo"></label>
+    </div>
+    <p class="rg-note">เลือกได้สูงสุด 31 วัน · วันที่เคยโหลดแล้วจะขึ้นทันที</p>
+    <button class="btn btn-y" id="rgGo" type="button">ดูสรุป</button>
+  </div>
+</div>
+<style>
+.rg-bar[hidden],.rg-days[hidden]{display:none!important}
+.rg-open{margin-top:8px;width:100%}
+.btn-g{background:var(--card-hi);color:var(--text)}
+.rg-sheet{position:fixed;inset:0;z-index:85;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.5);
+  opacity:0;pointer-events:none;transition:opacity .3s var(--spring)}
+.rg-sheet.show{opacity:1;pointer-events:auto}
+.rg-card{width:100%;max-width:440px;background:var(--card);color:var(--text);border-radius:26px 26px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));
+  transform:translateY(40px);transition:transform .45s var(--spring)}
+.rg-sheet.show .rg-card{transform:none}
+@media (min-width:700px){.rg-sheet{align-items:center}.rg-card{border-radius:26px}}
+.rg-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:17px}
+.rg-h button{border:0;background:var(--card-hi);color:var(--text);width:34px;height:34px;border-radius:50%;font-weight:700}
+.rg-presets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rg-presets button{height:44px;border:0;border-radius:14px;background:var(--card-hi);color:var(--text);font:600 14px inherit;font-family:inherit}
+.rg-presets button.on{background:var(--y);color:#000}
+.rg-custom{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.rg-custom label{background:var(--card-hi);border-radius:14px;padding:8px 12px}
+.rg-custom small{display:block;font-size:11px;color:var(--sub)}
+.rg-custom input{width:100%;border:0;background:none;color:var(--text);font:600 15px inherit;font-family:inherit;color-scheme:dark}
+.rg-note{font-size:12px;color:var(--sub);margin:10px 2px 12px}
+.rg-card .btn{width:100%}
+.rg-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#111;color:#fff;border-radius:18px;padding:12px 14px;margin-bottom:12px}
+.rg-bar b{display:block;font-size:15px}
+.rg-bar small{font-size:12px;color:rgba(255,255,255,.6)}
+.rg-bar button{flex:none;border:0;border-radius:99px;padding:8px 14px;background:var(--y);color:#000;font-weight:700;font-family:inherit}
+.rg-prog{grid-column:1/-1;background:#fff;border-radius:20px;padding:18px;text-align:center;color:var(--ink2);font-size:14px}
+.rg-prog i{display:block;height:8px;border-radius:99px;background:var(--cream2);margin-top:10px;overflow:hidden}
+.rg-prog i u{display:block;height:100%;width:0;background:var(--y);border-radius:99px;transition:width .3s}
+.rg-day{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;width:100%;border:0;text-align:left;background:var(--card-hi);color:var(--text);
+  border-radius:14px;padding:10px 12px;margin-bottom:6px;font-family:inherit}
+.rg-day b{font-size:14px}.rg-day small{grid-column:1;font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rg-day em{grid-row:1/3;grid-column:2;font-style:normal;font-weight:800;font-size:15px}
+.rg-day .bar{grid-column:1/-1;height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:4px}
+.rg-day .bar i{display:block;height:100%;background:var(--green);border-radius:99px}
+.rg-day.idle{opacity:.5}
+.when{display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:12px;font-weight:700;color:#111}
+.when span{background:var(--y);padding:3px 9px;border-radius:99px}
+.when em{font-style:normal;color:var(--ink2);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.miss{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.miss span{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(255,69,58,.12);color:#d4281f}
+.cachenote{font-size:11px;color:var(--mute)}
+</style>
+
 <script>
 (() => {
   const CFG = window.APP_CONFIG || {};
@@ -168,7 +238,7 @@
   const today = () => ymd(new Date());
 
   let date = new URLSearchParams(location.search).get('date') || today();
-  let filter = 'all', data = { stores: [], rows: [], form: { jobName: '', fields: [] } }, model = [], loading = false;
+  let filter = 'all', data = { stores: [], rows: [], form: { jobName: '', fields: [] } }, model = [], loading = false, mode = 'day', rg = null;
   const jobName = () => data.form.jobName || '';
   function paintJob(){
     $('jobTitle').textContent = jobName(); $('jobTitle').hidden = !jobName();
@@ -192,28 +262,68 @@
     $('next').disabled = date >= today();
   }
   function shift(n){
+    if (mode !== 'day') exitRange();
     const d = new Date(date + 'T00:00:00'); d.setDate(d.getDate() + n);
     date = ymd(d); paintDate(); load();
   }
   $('prev').onclick = () => shift(-1);
   $('next').onclick = () => shift(1);
-  $('dIn').onchange = e => { if (e.target.value){ date = e.target.value; paintDate(); load(); } };
+  $('dIn').onchange = e => { if (e.target.value){ if (mode !== 'day') exitRange(); date = e.target.value; paintDate(); load(); } };
   $('dIn').onclick = e => { try { e.target.showPicker(); } catch(err){} };
 
+  /* ---------- จำข้อมูลไว้ในเครื่อง (เปิดแล้วขึ้นทันที แล้วค่อยอัปเดตตามหลัง) ---------- */
+  const CK = 'pz_rep1_';
+  function cacheGet(d){ try { return JSON.parse(localStorage.getItem(CK + d) || 'null'); } catch(e){ return null; } }
+  function cachePut(d, j){
+    const v = JSON.stringify({ t: Date.now(), j });
+    try { localStorage.setItem(CK + d, v); }
+    catch(e){   // เต็ม → ลบของเก่าสุดครึ่งหนึ่ง
+      try {
+        const ks = Object.keys(localStorage).filter(k => k.indexOf(CK) === 0).sort();
+        ks.slice(0, Math.ceil(ks.length / 2)).forEach(k => localStorage.removeItem(k));
+        localStorage.setItem(CK + d, v);
+      } catch(e2){}
+    }
+  }
+  async function fetchDay(d){
+    let last;
+    for (let i = 0; i < 2; i++){
+      try {
+        const r = await fetch(`${CFG.API_URL}?action=report&date=${d}`);
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error || 'error');
+        cachePut(d, j);
+        return j;
+      } catch(e){ last = e; if (i === 0) await new Promise(ok => setTimeout(ok, 2500)); }
+    }
+    throw last;
+  }
+  const hhmm = t => new Date(t).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
   /* ---------- Load ---------- */
+  let loadSeq = 0;
   async function load(){
+    if (mode !== 'day') return;
     if (loading) return; loading = true;
+    const want = date, seq = ++loadSeq;
     $('refresh').classList.add('spinning');
-    if (!model.length) $('list').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+    const c = cacheGet(want);
+    if (c && c.j){
+      data = c.j; paintJob(); build(); render();
+      $('updated').textContent = 'ข้อมูลเมื่อ ' + hhmm(c.t) + ' น. · กำลังอัปเดต…';
+    } else {
+      model = [];
+      $('list').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+    }
     try {
-      const r = await fetch(`${CFG.API_URL}?action=report&date=${date}`);
-      const j = await r.json();
-      if (!j.ok) throw new Error(j.error);
+      const j = await fetchDay(want);
+      if (seq !== loadSeq || want !== date || mode !== 'day') return;
       data = j; paintJob(); build(); render();
-      $('updated').textContent = 'อัปเดตล่าสุด ' + new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.';
+      $('updated').textContent = 'อัปเดตล่าสุด ' + hhmm(Date.now()) + ' น.';
     } catch(e){
-      toast('โหลดข้อมูลไม่สำเร็จ', true);
-      if (!model.length) $('list').innerHTML = '<div class="empty">โหลดข้อมูลไม่สำเร็จ แตะปุ่มรีเฟรชเพื่อลองใหม่</div>';
+      if (want !== date || mode !== 'day') return;
+      if (c && c.j){ $('updated').textContent = 'ข้อมูลเมื่อ ' + hhmm(c.t) + ' น. (ยังต่อเซิร์ฟเวอร์ไม่ได้)'; toast('ยังอัปเดตไม่ได้ · แสดงข้อมูลล่าสุดในเครื่อง', true); }
+      else { toast('โหลดข้อมูลไม่สำเร็จ', true); $('list').innerHTML = '<div class="empty">โหลดข้อมูลไม่สำเร็จ แตะปุ่มรีเฟรชเพื่อลองใหม่</div>'; }
     } finally {
       loading = false; $('refresh').classList.remove('spinning');
     }
@@ -229,7 +339,16 @@
   }
 
   /* ---------- Render ---------- */
+  function labels(r){
+    const k = document.querySelector('.sumtxt .k'); if (k) k.textContent = r ? 'สาขาที่ส่งครบทุกวัน' : 'สาขาที่ส่งงาน';
+    const sm = document.querySelectorAll('.stats .stat small');
+    if (sm[0]) sm[0].lastChild.textContent = r ? 'ส่งครบ' : 'ส่งแล้ว';
+    if (sm[1]) sm[1].lastChild.textContent = r ? 'ยังไม่ครบ' : 'ยังไม่ส่ง';
+    const sb = document.querySelectorAll('#seg button'); if (sb.length === 3){ sb[1].textContent = r ? 'ส่งครบ' : 'ส่งแล้ว'; sb[2].textContent = r ? 'ยังไม่ครบ' : 'ยังไม่ส่ง'; }
+  }
   function render(){
+    labels(mode === 'range');
+    if (mode === 'range') return renderRange();
     const total = model.length, sent = model.filter(s => s.subs.length).length;
     const p = total ? sent / total : 0;
     $('ringBar').style.strokeDashoffset = 376.99 * (1 - p);
@@ -262,10 +381,12 @@
     </article>`;
   }
   function sub(r){
-    const F = data.form.fields;
+    const F = ((r._form || data.form || {}).fields) || [];
     const info = F.filter(f => f.type !== 'store' && f.type !== 'files');
     const ups = F.filter(f => f.type === 'files');
+    const when = whenTxt(r);
     return `<div class="subm">
+      <div class="when"><span>📅 ${esc(when)}</span>${r._job ? `<em>${esc(r._job)}</em>` : ''}</div>
       <div class="meta">
         ${info.map(f => `<div><small>${esc(f.label)}</small><b>${esc((r.a || {})[f.id] || '—')}</b></div>`).join('')}
         <div><small>เวลา</small><b>${esc(r.time)} น.</b></div>
@@ -275,6 +396,13 @@
       <div class="strip">${L.map(thumb).join('') || '<span class="none">ไม่มีไฟล์</span>'}</div>`; }).join('')}
       ${r.folder ? `<a class="flink" href="${esc(r.folder)}" target="_blank" rel="noopener">📁 เปิดโฟลเดอร์</a>` : ''}
     </div>`;
+  }
+  // วันที่ + เวลาที่ส่งงานจริง (จาก ts) — ถ้าไม่มี ts ใช้วันที่ของหน้า + เวลา
+  function whenTxt(r){
+    const d = Number(r.ts) > 1e11 ? new Date(Number(r.ts)) : new Date((r._date || date) + 'T00:00:00');
+    const ds = d.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' });
+    const tm = Number(r.ts) > 1e11 ? hhmm(Number(r.ts)) : (r.time || '');
+    return ds + (tm ? ' · ' + tm + ' น.' : '');
   }
   function thumb(f){
     return `<button class="tb" type="button" data-id="${esc(f.id)}" data-url="${esc(f.url)}">
@@ -291,7 +419,6 @@
     render();
   });
   let qT; $('q').oninput = () => { clearTimeout(qT); qT = setTimeout(render, 150); };
-  $('refresh').onclick = load;
 
   /* ---------- Lightbox ---------- */
   $('list').addEventListener('click', e => {
@@ -307,6 +434,7 @@
 
   /* ---------- Copy summary ---------- */
   $('copyBtn').onclick = async () => {
+    if (mode === 'range') return copyRange();
     const d = new Date(date + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
     const sent = model.filter(s => s.subs.length), no = model.filter(s => !s.subs.length);
     let txt = `📋 สรุปส่งงาน ${jobName()}\n🗓 ${d}\n✅ ส่งแล้ว ${sent.length}/${model.length} สาขา\n`;
@@ -317,8 +445,154 @@
   };
 
   /* ---------- Auto refresh ---------- */
-  setInterval(() => { if (!document.hidden && date === today()) load(); }, 60000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
+  setInterval(() => { if (!document.hidden && mode === 'day' && date === today()) load(); }, 120000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && mode === 'day') load(); });
+
+  /* =====================================================================
+     📊 สรุปหลายวัน — ดึงทีละวัน (วันที่เคยโหลดแล้วใช้ของในเครื่อง) แล้วรวมเป็นรายสาขา
+     ===================================================================== */
+  const thd = (d, o) => new Date(d + 'T00:00:00').toLocaleDateString('th-TH', o || { weekday: 'short', day: 'numeric', month: 'short' });
+  function daysBetween(a, b){ const out = []; const d = new Date(a + 'T00:00:00'), e = new Date(b + 'T00:00:00'); while (d <= e && out.length < 31){ out.push(ymd(d)); d.setDate(d.getDate() + 1); } return out; }
+  function openRg(){
+    if (!$('rgTo').value){ $('rgTo').value = date; const f = new Date(date + 'T00:00:00'); f.setDate(f.getDate() - 6); $('rgFrom').value = ymd(f); }
+    $('rgFrom').max = $('rgTo').max = today();
+    $('rgSheet').classList.add('show');
+  }
+  const closeRg = () => $('rgSheet').classList.remove('show');
+  $('rgOpen').onclick = openRg; $('rgX').onclick = closeRg;
+  $('rgSheet').addEventListener('click', e => { if (e.target === $('rgSheet')) closeRg(); });
+  $('rgSheet').querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
+    const t = new Date(today() + 'T00:00:00'); let f, e = new Date(t);
+    if (b.dataset.p === 'month'){ f = new Date(t.getFullYear(), t.getMonth(), 1); }
+    else if (b.dataset.p === 'last'){ f = new Date(t.getFullYear(), t.getMonth() - 1, 1); e = new Date(t.getFullYear(), t.getMonth(), 0); }
+    else { f = new Date(t); f.setDate(f.getDate() - (Number(b.dataset.p) - 1)); }
+    $('rgFrom').value = ymd(f); $('rgTo').value = ymd(e);
+    $('rgSheet').querySelectorAll('[data-p]').forEach(x => x.classList.toggle('on', x === b));
+  });
+  $('rgGo').onclick = () => {
+    let a = $('rgFrom').value, b = $('rgTo').value;
+    if (!a || !b){ toast('เลือกวันที่ก่อน', true); return; }
+    if (a > b) [a, b] = [b, a];
+    if (b > today()) b = today();
+    const days = daysBetween(a, b);
+    if (days[days.length - 1] !== b) toast('เกิน 31 วัน · สรุปให้ 31 วันแรก');
+    closeRg(); startRange(days);
+  };
+  $('rgBack').onclick = () => { exitRange(); load(); };
+
+  function exitRange(){
+    mode = 'day'; rg = null;
+    $('rgBar').hidden = true; $('rgDays').hidden = true;
+    document.querySelector('.datebar').style.opacity = '';
+    $('copyBtn').textContent = '📋 คัดลอกสรุปส่ง LINE';
+  }
+
+  async function startRange(days){
+    mode = 'range'; loadSeq++;
+    const my = rg = { days, data: {}, failed: [], done: 0 };
+    $('rgBar').hidden = false; $('rgDays').hidden = false;
+    document.querySelector('.datebar').style.opacity = '.45';
+    $('copyBtn').textContent = '📋 คัดลอกสรุปช่วงนี้ส่ง LINE';
+    $('rgTitle').textContent = 'สรุป ' + thd(days[0], { day: 'numeric', month: 'short' }) + ' – ' + thd(days[days.length - 1], { day: 'numeric', month: 'short', year: '2-digit' });
+    $('rgSub').textContent = days.length + ' วัน · กำลังโหลด…';
+    const t = today(), need = [];
+    days.forEach(d => { const c = cacheGet(d); if (c && c.j && d < t) my.data[d] = c.j; else need.push(d); });
+    my.done = days.length - need.length;
+    paintProgress();
+    let i = 0;
+    async function worker(){
+      while (i < need.length && rg === my){
+        const d = need[i++];
+        try { my.data[d] = await fetchDay(d); } catch(e){ const c = cacheGet(d); if (c && c.j) my.data[d] = c.j; else my.failed.push(d); }
+        my.done++; if (rg === my) paintProgress();
+      }
+    }
+    await Promise.all([worker(), worker()]);
+    if (rg !== my) return;
+    buildRange(); render();
+    $('rgSub').textContent = days.length + ' วัน' + (my.failed.length ? ' · โหลดไม่ได้ ' + my.failed.length + ' วัน (แตะ ↻ ลองใหม่)' : '') + ' · อัปเดต ' + hhmm(Date.now()) + ' น.';
+  }
+  function paintProgress(){
+    const p = rg.days.length ? rg.done / rg.days.length : 1;
+    if (rg.done < rg.days.length) $('list').innerHTML = `<div class="rg-prog">กำลังรวบรวม ${rg.done}/${rg.days.length} วัน…<i><u style="width:${Math.round(p * 100)}%"></u></i></div>`;
+  }
+  function buildRange(){
+    const stores = {}, perDay = [];
+    rg.days.forEach(d => {
+      const j = rg.data[d]; if (!j) { perDay.push({ d, fail: true }); return; }
+      (j.stores || []).forEach(s => { if (!stores[s.id]) stores[s.id] = { ...s, subs: [], daysSent: {} }; });
+      const job = (j.form && j.form.jobName) || '';
+      (j.rows || []).forEach(r => {
+        const st = stores[r.storeId] = stores[r.storeId] || { id: r.storeId, name: '(ไม่อยู่ใน DATA STORE)', subs: [], daysSent: {} };
+        st.subs.push({ ...r, _form: j.form, _job: job, _date: d });
+        st.daysSent[d] = 1;
+      });
+      const sentStores = new Set((j.rows || []).map(r => r.storeId));
+      perDay.push({ d, job, sent: sentStores.size, total: (j.stores || []).length, rows: (j.rows || []).length });
+    });
+    rg.perDay = perDay;
+    rg.active = perDay.filter(x => !x.fail && x.rows > 0).map(x => x.d);   // วันที่มีคนส่งงาน = วันที่มีงาน
+    model = Object.values(stores).map(s => ({ ...s, subs: s.subs.sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0)),
+      miss: rg.active.filter(d => !s.daysSent[d]) }));
+  }
+  function renderRange(){
+    if (!rg || !rg.perDay) return;
+    const A = rg.active.length, total = model.length;
+    const full = model.filter(s => A && !s.miss.length).length;
+    const pairs = total * A, got = model.reduce((n, s) => n + (A - s.miss.length), 0);
+    const p = pairs ? got / pairs : 0;
+    $('ringBar').style.strokeDashoffset = 376.99 * (1 - p);
+    $('ringBar').style.stroke = p >= 1 ? 'var(--green)' : 'var(--y)';
+    $('pct').textContent = Math.round(p * 100) + '%';
+    $('sentN').textContent = full; $('totalN').textContent = total;
+    $('subN').textContent = model.reduce((n, s) => n + s.subs.length, 0) + ' รายการ · มีงาน ' + A + ' วัน';
+    $('sOk').textContent = full; $('sNo').textContent = total - full;
+    $('updated').textContent = '';
+    $('rgDayList').innerHTML = rg.perDay.slice().reverse().map(x => x.fail
+      ? `<button class="rg-day idle" type="button" data-d="${x.d}"><b>${esc(thd(x.d))}</b><small>โหลดไม่ได้</small><em>—</em></button>`
+      : `<button class="rg-day ${x.rows ? '' : 'idle'}" type="button" data-d="${x.d}"><b>${esc(thd(x.d))}</b><small>${esc(x.job || (x.rows ? '' : 'ไม่มีการส่งงาน'))}</small>
+          <em>${x.sent}/${x.total}</em><div class="bar"><i style="width:${x.total ? Math.round(x.sent / x.total * 100) : 0}%"></i></div></button>`).join('');
+    const q = $('q').value.trim().toLowerCase();
+    const shown = model.filter(s => {
+      if (filter === 'sent' && (!A || s.miss.length)) return false;
+      if (filter === 'no' && !s.miss.length) return false;
+      if (!q) return true;
+      return [s.id, s.name, ...s.subs.flatMap(x => Object.values(x.a || {}))].join(' ').toLowerCase().includes(q);
+    }).sort((a, b) => b.miss.length - a.miss.length || String(a.id).localeCompare(String(b.id)));
+    $('count').textContent = shown.length + ' สาขา';
+    $('list').innerHTML = shown.length ? shown.map(rcard).join('') : '<div class="empty">ไม่มีรายการ</div>';
+  }
+  function rcard(s, i){
+    const A = rg.active.length, n = A - s.miss.length, ok = A && !s.miss.length;
+    return `<article class="rc ${n ? 'ok' : 'no'}" style="--i:${i}">
+      <div class="rhead">
+        <div><div class="sid">${esc(s.id)}</div><div class="sname">${esc(s.name)}</div></div>
+        <span class="pill ${ok ? 'pill-ok' : 'pill-no'}"><i></i>ส่ง ${n}/${A} วัน</span>
+      </div>
+      ${s.miss.length ? `<div class="miss">${s.miss.map(d => `<span>ขาด ${esc(thd(d, { day: 'numeric', month: 'short' }))}</span>`).join('')}</div>` : ''}
+      ${s.subs.map(sub).join('')}
+    </article>`;
+  }
+  $('rgDayList').addEventListener('click', e => {
+    const b = e.target.closest('[data-d]'); if (!b) return;
+    exitRange(); date = b.dataset.d; paintDate(); load(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  async function copyRange(){
+    if (!rg || !rg.perDay) return;
+    const A = rg.active.length;
+    let txt = `📊 สรุปส่งงาน ${thd(rg.days[0], { day: 'numeric', month: 'short' })} – ${thd(rg.days[rg.days.length - 1], { day: 'numeric', month: 'short', year: '2-digit' })}\n`;
+    rg.perDay.forEach(x => { if (!x.fail && x.rows) txt += `• ${thd(x.d)} ${x.job ? '(' + x.job + ') ' : ''}✅ ${x.sent}/${x.total}\n`; });
+    const miss = model.filter(s => s.miss.length).sort((a, b) => b.miss.length - a.miss.length);
+    txt += miss.length ? `\n❌ ยังส่งไม่ครบ\n` + miss.map(s => `• ${s.id} ${s.name} — ขาด ${s.miss.map(d => thd(d, { day: 'numeric', month: 'short' })).join(', ')}`).join('\n')
+                       : `\n🎉 ส่งครบทุกสาขาทุกวัน (${A} วัน)`;
+    try { await navigator.clipboard.writeText(txt); toast('คัดลอกแล้ว วางใน LINE ได้เลย'); }
+    catch(e){ toast('คัดลอกไม่สำเร็จ', true); }
+  }
+  // ↻ ในโหมดสรุป = โหลดทุกวันใหม่
+  $('refresh').onclick = () => {
+    if (mode === 'range' && rg){ const days = rg.days; days.forEach(d => { try { localStorage.removeItem(CK + d); } catch(e){} }); startRange(days); }
+    else load();
+  };
 
   paintDate(); load();
 })();
