@@ -171,7 +171,7 @@
   <div class="rg-card">
     <div class="rg-h"><b>📊 สรุปหลายวัน</b><button type="button" id="rgX" aria-label="ปิด">✕</button></div>
     <div class="rg-presets">
-      <button type="button" data-p="7">7 วันล่าสุด</button>
+      <button type="button" data-p="7" class="on">7 วันล่าสุด</button>
       <button type="button" data-p="14">14 วันล่าสุด</button>
       <button type="button" data-p="month">เดือนนี้</button>
       <button type="button" data-p="last">เดือนก่อน</button>
@@ -180,7 +180,7 @@
       <label><small>ตั้งแต่</small><input type="date" id="rgFrom"></label>
       <label><small>ถึง</small><input type="date" id="rgTo"></label>
     </div>
-    <p class="rg-note">เลือกได้สูงสุด 31 วัน · วันที่เคยโหลดแล้วจะขึ้นทันที</p>
+    <p class="rg-note">นับแบบงานเดียว: สาขาส่งวันไหนก็ได้ในช่วงนี้ = ส่งแล้ว · เลือกได้สูงสุด 31 วัน</p>
     <button class="btn btn-y" id="rgGo" type="button">ดูสรุป</button>
   </div>
 </div>
@@ -347,7 +347,7 @@
     const sb = document.querySelectorAll('#seg button'); if (sb.length === 3){ sb[1].textContent = r ? 'ส่งครบ' : 'ส่งแล้ว'; sb[2].textContent = r ? 'ยังไม่ครบ' : 'ยังไม่ส่ง'; }
   }
   function render(){
-    labels(mode === 'range');
+    labels(false);   // สรุปหลายวัน = นับแบบงานเดียว (ส่งครั้งเดียวก็ถือว่าส่งแล้ว) ใช้คำเดียวกับรายวัน
     if (mode === 'range') return renderRange();
     const total = model.length, sent = model.filter(s => s.subs.length).length;
     const p = total ? sent / total : 0;
@@ -535,41 +535,40 @@
     model = Object.values(stores).map(s => ({ ...s, subs: s.subs.sort((a, b) => (Number(b.ts) || 0) - (Number(a.ts) || 0)),
       miss: rg.active.filter(d => !s.daysSent[d]) }));
   }
+  // 📊 สรุปแบบ "งานเดียว": สาขาส่งครั้งไหนก็ได้ในช่วงที่เลือก = ส่งแล้ว
   function renderRange(){
     if (!rg || !rg.perDay) return;
-    const A = rg.active.length, total = model.length;
-    const full = model.filter(s => A && !s.miss.length).length;
-    const pairs = total * A, got = model.reduce((n, s) => n + (A - s.miss.length), 0);
-    const p = pairs ? got / pairs : 0;
+    const total = model.length, sent = model.filter(s => s.subs.length).length;
+    const p = total ? sent / total : 0;
     $('ringBar').style.strokeDashoffset = 376.99 * (1 - p);
     $('ringBar').style.stroke = p >= 1 ? 'var(--green)' : 'var(--y)';
     $('pct').textContent = Math.round(p * 100) + '%';
-    $('sentN').textContent = full; $('totalN').textContent = total;
-    $('subN').textContent = model.reduce((n, s) => n + s.subs.length, 0) + ' รายการ · มีงาน ' + A + ' วัน';
-    $('sOk').textContent = full; $('sNo').textContent = total - full;
-    $('updated').textContent = '';
+    $('sentN').textContent = sent; $('totalN').textContent = total;
+    $('subN').textContent = model.reduce((n, s) => n + s.subs.length, 0) + ' รายการที่ส่ง';
+    $('sOk').textContent = sent; $('sNo').textContent = total - sent;
+    $('updated').textContent = p >= 1 ? '🎉 ส่งครบทุกสาขาแล้ว' : '';
     $('rgDayList').innerHTML = rg.perDay.slice().reverse().map(x => x.fail
       ? `<button class="rg-day idle" type="button" data-d="${x.d}"><b>${esc(thd(x.d))}</b><small>โหลดไม่ได้</small><em>—</em></button>`
-      : `<button class="rg-day ${x.rows ? '' : 'idle'}" type="button" data-d="${x.d}"><b>${esc(thd(x.d))}</b><small>${esc(x.job || (x.rows ? '' : 'ไม่มีการส่งงาน'))}</small>
-          <em>${x.sent}/${x.total}</em><div class="bar"><i style="width:${x.total ? Math.round(x.sent / x.total * 100) : 0}%"></i></div></button>`).join('');
+      : `<button class="rg-day ${x.rows ? '' : 'idle'}" type="button" data-d="${x.d}"><b>${esc(thd(x.d))}</b><small>${x.rows ? 'ส่ง ' + x.sent + ' สาขา' : 'ไม่มีการส่งงาน'}</small>
+          <em>${x.rows ? '+' + x.sent : '0'}</em></button>`).join('');
     const q = $('q').value.trim().toLowerCase();
     const shown = model.filter(s => {
-      if (filter === 'sent' && (!A || s.miss.length)) return false;
-      if (filter === 'no' && !s.miss.length) return false;
+      if (filter === 'sent' && !s.subs.length) return false;
+      if (filter === 'no' && s.subs.length) return false;
       if (!q) return true;
       return [s.id, s.name, ...s.subs.flatMap(x => Object.values(x.a || {}))].join(' ').toLowerCase().includes(q);
-    }).sort((a, b) => b.miss.length - a.miss.length || String(a.id).localeCompare(String(b.id)));
+    }).sort((a, b) => (a.subs.length ? 1 : 0) - (b.subs.length ? 1 : 0) || String(a.id).localeCompare(String(b.id)));   // ยังไม่ส่งขึ้นก่อน
     $('count').textContent = shown.length + ' สาขา';
     $('list').innerHTML = shown.length ? shown.map(rcard).join('') : '<div class="empty">ไม่มีรายการ</div>';
   }
   function rcard(s, i){
-    const A = rg.active.length, n = A - s.miss.length, ok = A && !s.miss.length;
-    return `<article class="rc ${n ? 'ok' : 'no'}" style="--i:${i}">
+    const ok = s.subs.length > 0;
+    const first = ok ? s.subs[s.subs.length - 1] : null;   // ส่งครั้งแรก (subs เรียงใหม่ → เก่า)
+    return `<article class="rc ${ok ? 'ok' : 'no'}" style="--i:${i}">
       <div class="rhead">
         <div><div class="sid">${esc(s.id)}</div><div class="sname">${esc(s.name)}</div></div>
-        <span class="pill ${ok ? 'pill-ok' : 'pill-no'}"><i></i>ส่ง ${n}/${A} วัน</span>
+        <span class="pill ${ok ? 'pill-ok' : 'pill-no'}"><i></i>${ok ? 'ส่งแล้ว' + (s.subs.length > 1 ? ' ×' + s.subs.length : '') : 'ยังไม่ส่ง'}</span>
       </div>
-      ${s.miss.length ? `<div class="miss">${s.miss.map(d => `<span>ขาด ${esc(thd(d, { day: 'numeric', month: 'short' }))}</span>`).join('')}</div>` : ''}
       ${s.subs.map(sub).join('')}
     </article>`;
   }
@@ -579,12 +578,10 @@
   });
   async function copyRange(){
     if (!rg || !rg.perDay) return;
-    const A = rg.active.length;
-    let txt = `📊 สรุปส่งงาน ${thd(rg.days[0], { day: 'numeric', month: 'short' })} – ${thd(rg.days[rg.days.length - 1], { day: 'numeric', month: 'short', year: '2-digit' })}\n`;
-    rg.perDay.forEach(x => { if (!x.fail && x.rows) txt += `• ${thd(x.d)} ${x.job ? '(' + x.job + ') ' : ''}✅ ${x.sent}/${x.total}\n`; });
-    const miss = model.filter(s => s.miss.length).sort((a, b) => b.miss.length - a.miss.length);
-    txt += miss.length ? `\n❌ ยังส่งไม่ครบ\n` + miss.map(s => `• ${s.id} ${s.name} — ขาด ${s.miss.map(d => thd(d, { day: 'numeric', month: 'short' })).join(', ')}`).join('\n')
-                       : `\n🎉 ส่งครบทุกสาขาทุกวัน (${A} วัน)`;
+    const sent = model.filter(s => s.subs.length), no = model.filter(s => !s.subs.length);
+    const job = (rg.perDay.filter(x => x.job).map(x => x.job).pop()) || '';
+    let txt = `📋 สรุปส่งงาน ${job}\n🗓 ${thd(rg.days[0], { day: 'numeric', month: 'short' })} – ${thd(rg.days[rg.days.length - 1], { day: 'numeric', month: 'short', year: '2-digit' })}\n✅ ส่งแล้ว ${sent.length}/${model.length} สาขา\n`;
+    txt += no.length ? `\n❌ ยังไม่ส่ง\n` + no.map(s => `• ${s.id} ${s.name}`).join('\n') : `\n🎉 ส่งครบทุกสาขา`;
     try { await navigator.clipboard.writeText(txt); toast('คัดลอกแล้ว วางใน LINE ได้เลย'); }
     catch(e){ toast('คัดลอกไม่สำเร็จ', true); }
   }
